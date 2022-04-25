@@ -1,7 +1,12 @@
-#![feature(box_syntax, box_patterns, generic_const_exprs, explicit_generic_args_with_impl_trait)]
+#![feature(
+    box_syntax,
+    box_patterns,
+    generic_const_exprs,
+    explicit_generic_args_with_impl_trait
+)]
 
-use std::{fmt::Display};
 use std::fmt;
+use std::fmt::Display;
 
 fn main() {
     println!("Hello, world!");
@@ -15,7 +20,7 @@ fn main() {
     let simple = simplify_complete(subbed);
     match simple {
         Ok(v) => println!("simplified:\n{:?}", v),
-        Err(ref x) => println!("simplified:\n {}", x)
+        Err(ref x) => println!("simplified:\n {}", x),
     }
     let simp = simple.unwrap_err();
 
@@ -26,7 +31,7 @@ fn main() {
             for (input, v) in t {
                 println!("{} => {:?}", input.value, v);
             }
-        },
+        }
         Err(x) => {
             println!("Error: {}", x)
         }
@@ -90,18 +95,18 @@ enum Expr<const N: u16> {
     Const(Symbol<N>),
     And(Box<Expr<N>>, Box<Expr<N>>),
     Or(Box<Expr<N>>, Box<Expr<N>>),
-    Not(Box<Expr<N>>)
+    Not(Box<Expr<N>>),
 }
 
 #[derive(Debug, Clone, PartialEq, Copy)]
 enum Value {
     True,
-    False
+    False,
 }
 
 #[derive(Debug, Clone, PartialEq, Copy)]
 struct NValue<const N: u16> {
-    value: u16
+    value: u16,
 }
 
 impl<const N: u16> NValue<N> {
@@ -129,25 +134,29 @@ impl<const N: u16> Display for Expr<N> {
             Expr::Not(expr) => match **expr {
                 Expr::Const(_) => format!("! {}", expr),
                 Expr::Value(_) => format!("! {}", expr),
-                _ =>  format!("! ({})", expr)
+                _ => format!("! ({})", expr),
             },
             Expr::And(a, b) => match (*a.clone(), *b.clone()) {
                 (Expr::Const(_), Expr::Const(_)) => format!("{} * {}", a, b),
                 (Expr::Const(_), Expr::Not(box Expr::Const(_))) => format!("{} * {}", a, b),
                 (Expr::Const(_), _) => format!("{} * ({})", a, b),
                 (Expr::Not(box Expr::Const(_)), Expr::Const(_)) => format!("{} * {}", a, b),
-                (Expr::Not(box Expr::Const(_)), Expr::Not(box Expr::Const(_))) => format!("{} * {}", a, b),
+                (Expr::Not(box Expr::Const(_)), Expr::Not(box Expr::Const(_))) => {
+                    format!("{} * {}", a, b)
+                }
                 (_, Expr::Const(_)) => format!("({}) * {}", a, b),
-                (_, _) => format!("({}) * ({})", a, b)
+                (_, _) => format!("({}) * ({})", a, b),
             },
             Expr::Or(a, b) => match (*a.clone(), *b.clone()) {
                 (Expr::Const(_), Expr::Const(_)) => format!("{} + {}", a, b),
                 (Expr::Const(_), Expr::Not(box Expr::Const(_))) => format!("{} + {}", a, b),
                 (Expr::Const(_), _) => format!("{} + ({})", a, b),
                 (Expr::Not(box Expr::Const(_)), Expr::Const(_)) => format!("{} + {}", a, b),
-                (Expr::Not(box Expr::Const(_)), Expr::Not(box Expr::Const(_))) => format!("{} + {}", a, b),
+                (Expr::Not(box Expr::Const(_)), Expr::Not(box Expr::Const(_))) => {
+                    format!("{} + {}", a, b)
+                }
                 (_, Expr::Const(_)) => format!("({}) + {}", a, b),
-                (_, _) => format!("({}) + ({})", a, b)
+                (_, _) => format!("({}) + ({})", a, b),
             },
         };
         write!(f, "{}", s)
@@ -169,25 +178,31 @@ fn simplify<const N: u16>(expr: Expr<N>) -> Expr<N> {
             (x, Expr::Value(Value::True)) => simplify(x),
             (Expr::Value(Value::False), _) => Expr::Value(Value::False),
             (_, Expr::Value(Value::False)) => Expr::Value(Value::False),
-            (_, _) => Expr::And(Box::new(simplify(*a)), Box::new(simplify(*b)))
+            (_, _) => Expr::And(Box::new(simplify(*a)), Box::new(simplify(*b))),
         },
         Expr::Or(a, b) => match (*a.clone(), *b.clone()) {
             (Expr::Value(Value::True), _) => Expr::Value(Value::True),
             (_, Expr::Value(Value::True)) => Expr::Value(Value::True),
             (Expr::Value(Value::False), x) => simplify(x),
             (x, Expr::Value(Value::False)) => simplify(x),
-            (_, _) => Expr::Or(Box::new(simplify(*a)), Box::new(simplify(*b)))
+            (_, _) => Expr::Or(Box::new(simplify(*a)), Box::new(simplify(*b))),
         },
     }
 }
 
 fn sub_one<const N: u16>(x: Symbol<N>, v: Value, expr: Expr<N>) -> Expr<N> {
     match expr {
-        Expr::Const(c) => if c == x { Expr::Value(v) } else { Expr::Const(c) },
+        Expr::Const(c) => {
+            if c == x {
+                Expr::Value(v)
+            } else {
+                Expr::Const(c)
+            }
+        }
         Expr::Not(a) => Expr::Not(Box::new(sub_one(x, v, *a))),
         Expr::And(a, b) => Expr::And(Box::new(sub_one(x, v, *a)), Box::new(sub_one(x, v, *b))),
         Expr::Or(a, b) => Expr::Or(Box::new(sub_one(x, v, *a)), Box::new(sub_one(x, v, *b))),
-        p => p
+        p => p,
     }
 }
 
@@ -199,7 +214,6 @@ fn substitute<const N: u16>(x: GenericSymbol<N>, v: NValue<N>, expr: Expr<N>) ->
     exp
 }
 
-
 fn xor<const N: u16>(a: impl AsExpr<N>, b: impl AsExpr<N>) -> Expr<N> {
     _xor(&a.expr(), &b.expr())
 }
@@ -208,17 +222,17 @@ fn _xor<const N: u16>(a: &Expr<N>, b: &Expr<N>) -> Expr<N> {
     Expr::Or(
         Box::new(Expr::And(
             Box::new(Expr::Not(Box::new(a.clone()))),
-            Box::new(b.clone()))),
+            Box::new(b.clone()),
+        )),
         Box::new(Expr::And(
             Box::new(a.clone()),
-            Box::new(Expr::Not(Box::new(b.clone()))))))
+            Box::new(Expr::Not(Box::new(b.clone()))),
+        )),
+    )
 }
 
 fn and<const N: u16>(a: impl AsExpr<N>, b: impl AsExpr<N>) -> Expr<N> {
-    Expr::And(
-        Box::new(a.expr()),
-        Box::new(b.expr())
-    )
+    Expr::And(Box::new(a.expr()), Box::new(b.expr()))
 }
 
 /// Multi input And
@@ -256,10 +270,7 @@ fn or_n<const N: u16>(exprs: &[impl AsExpr<N> + Clone], current: Expr<N>) -> Exp
 }
 
 fn or<const N: u16>(a: impl AsExpr<N>, b: impl AsExpr<N>) -> Expr<N> {
-    Expr::Or(
-        Box::new(a.expr()),
-        Box::new(b.expr())
-    )
+    Expr::Or(Box::new(a.expr()), Box::new(b.expr()))
 }
 
 fn not<const N: u16>(a: impl AsExpr<N>) -> Expr<N> {
@@ -285,25 +296,30 @@ fn prod_of_xor<const N: u16>(a: GenericSymbol<N>, b: GenericSymbol<N>, to: u16) 
 fn less_than<const N: u16>(a: GenericSymbol<N>, b: GenericSymbol<N>) -> Expr<N> {
     let mut expr = Expr::Empty;
     for i in 0..N {
-        let n  = N - 1 - i;
+        let n = N - 1 - i;
         if expr == Expr::Empty {
             expr = and(not(a.bit(n)), b.bit(n));
         } else {
-            expr = or(expr, and(prod_of_xor(a, b, n), and(not(a.bit(n)), b.bit(n))))
+            expr = or(
+                expr,
+                and(prod_of_xor(a, b, n), and(not(a.bit(n)), b.bit(n))),
+            )
         }
     }
     expr
 }
 
-
 fn greater_than<const N: u16>(a: GenericSymbol<N>, b: GenericSymbol<N>) -> Expr<N> {
     let mut expr = Expr::Empty;
     for i in 0..N {
-        let n  = N - 1 - i;
+        let n = N - 1 - i;
         if expr == Expr::Empty {
             expr = and(a.bit(n), not(b.bit(n)));
         } else {
-            expr = or(expr, and(prod_of_xor(a, b, n), and(a.bit(n), not(b.bit(n)))))
+            expr = or(
+                expr,
+                and(prod_of_xor(a, b, n), and(a.bit(n), not(b.bit(n)))),
+            )
         }
     }
     expr
@@ -313,19 +329,18 @@ fn greater_than_or_equal_to<const N: u16>(a: GenericSymbol<N>, b: GenericSymbol<
     or(greater_than(a, b), equal_to(a, b))
 }
 
-fn truth_table<const N: u16>(expr: Expr<N>, symbol: GenericSymbol<N>) -> Result<Vec<(NValue<N>, Value)>, Expr<N>> {
+fn truth_table<const N: u16>(
+    expr: Expr<N>,
+    symbol: GenericSymbol<N>,
+) -> Result<Vec<(NValue<N>, Value)>, Expr<N>> {
     let mut table: Vec<(NValue<N>, Value)> = Vec::new();
     for i in 0..2_u16.pow(N.into()) {
         let value: NValue<N> = NValue::new(i);
         let sub = substitute(symbol, value, expr.clone());
         let simplified = simplify_complete(sub);
         match simplified {
-            Ok(v) => {
-                table.push((value, v))
-            },
-            Err(x) => {
-                return Err(x)
-            }
+            Ok(v) => table.push((value, v)),
+            Err(x) => return Err(x),
         }
     }
 
@@ -338,7 +353,7 @@ fn simplify_complete<const N: u16>(expr: Expr<N>) -> Result<Value, Expr<N>> {
         // If they're equal, then it is simplified
         match simp {
             Expr::Value(v) => Ok(v),
-            _ => Err(simp)
+            _ => Err(simp),
         }
     } else {
         simplify_complete(simp)
