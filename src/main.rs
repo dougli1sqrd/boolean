@@ -5,74 +5,174 @@
     explicit_generic_args_with_impl_trait
 )]
 
-use std::fmt;
+use std::fmt::{self, format};
 use std::fmt::Display;
 
+const A: char = 'A';
+const B: char = 'B';
+
 fn main() {
-    println!("Hello, world!");
+    // Visible is (L >= 40) && (L < 440)
+    // let vert_greater_than = simplify_complete(
+    //     substitute(
+    //         GenericSymbol('B'), NValue { value: 40 }, 
+    //         greater_than_or_equal_to::<10>(GenericSymbol('A'), GenericSymbol('B'))
+    //     )
+    // );
 
-    let lt = less_than::<1>(GenericSymbol('A'), GenericSymbol('B'));
-    println!("{}", lt);
-    for i in 0..2 {
-        for j in 0..2 {
-            let sub = substitute(
-                GenericSymbol('A'),
-                NValue { value: i },
-                substitute(GenericSymbol('B'), NValue { value: j }, lt.clone()),
-            );
-            //println!("{:?}", sub);
-            let v = simplify_complete(sub).unwrap();
-            println!("{} {} => {:?}", i, j, v);
-        }
-    }
+    // let vert_less_than = simplify_complete(
+    //     substitute(
+    //         GenericSymbol('B'), NValue { value: 440 },
+    //         less_than::<10>(GenericSymbol('A'), GenericSymbol('B'))
+    //     )
+    // );
+    
+    // let vertical_visible = simplify_complete(
+    //     and(
+    //         vert_greater_than,
+    //         vert_less_than
+    //     )
+    // );
+    
+    // println!("Vertical Visible ((L >= 40) && (L < 440)):");
+    // for (n, value) in truth_table(vertical_visible, GenericSymbol('A')) {
+    //     println!("{} => {}", n.value, value);
+    // }
+    // println!("{}", vertical_visible);
 
-    let lt = less_than::<2>(GenericSymbol('A'), GenericSymbol('B'));
-    println!("{}", lt);
+    // V Sync, when L = 490, 491
+    // let vsync_start = simplify_complete(
+    //     substitute(
+    //         GenericSymbol('B'), NValue { value: 490 }, 
+    //         equal_to::<10>(GenericSymbol('A'), GenericSymbol('B'))
+    //     )
+    // );
 
-    for i in 0..4 {
-        for j in 0..4 {
-            let sub = substitute(
-                GenericSymbol('A'),
-                NValue { value: i },
-                substitute(GenericSymbol('B'), NValue { value: j }, lt.clone()),
-            );
-            //println!("{:?}", sub);
-            let v = simplify_complete(sub).unwrap();
-            println!("{} {} => {:?}", i, j, v);
-        }
-    }
+    // let vsync_end = simplify_complete(
+    //     substitute(
+    //         GenericSymbol('B'), NValue { value: 491 }, 
+    //         equal_to::<10>(GenericSymbol('A'), GenericSymbol('B'))
+    //     )
+    // );
 
-    let lt = less_than::<4>(GenericSymbol('A'), GenericSymbol('B'));
-    println!("{}", lt);
+    // let vsync = simplify_complete(
+    //     not(or(
+    //         vsync_start,
+    //         vsync_end
+    //     ))
+    // );
 
-    let lt = less_than::<6>(GenericSymbol('A'), GenericSymbol('B'));
-    println!("{}", lt);
+    // println!("Vertical Visible NOT (L == 490 OR L == 491):");
+    // for (n, value) in truth_table(vsync.clone(), GenericSymbol('A')) {
+    //     println!("{} => {}", n.value, value);
+    // }
 
-    //let subbed = substitute(GenericSymbol('B'), NValue { value: 47 }, lt);
-    let subbed = substitute(GenericSymbol('B'), NValue { value: 47 }, lt);
-    println!("substitue:\n{}", subbed);
+    // println!("{}", vsync);
 
-    let simple = simplify_complete(subbed);
-    match simple {
-        Ok(v) => println!("simplified:\n{:?}", v),
-        Err(ref x) => println!("simplified:\n {}", x),
-    }
-    let simp = simple.unwrap_err();
 
-    println!("Table:\n");
-    let table = truth_table(simp, GenericSymbol('A'));
-    match table {
-        Ok(t) => {
-            for (input, v) in t {
-                println!("{} => {:?}", input.value, v);
-            }
-        }
-        Err(x) => {
-            println!("Error: {}", x)
-        }
-    }
-    // let multi_and = and_n::<1>(&['A', 'B', 'C'], Expr::Empty);
-    // println!("{}", multi_and);
+
+    // println!("{}", vsync);
+
+    //        2 + ! 3 + 4 + ! 5 + ! 6 + ! 7 + ! 8 + 9
+
+    // ! 1 + (2 + (! 3 + (4 + (! 5 + (! 6 + (! 7 + (! 8 + 9)))))))
+    // ! 1 + 2 + ! 3 + 4 + ! 5 + ! 6 + ! 7 + ! 8 + 9
+    // let testvsync = or::<10>(
+    //     not(Expr::Const(Symbol(A, 1))),
+    //     or(
+    //         Expr::Const(Symbol(A, 2)),
+    //         or(
+    //             not(Expr::Const(Symbol(A, 3))),
+    //             or(
+    //                 Expr::Const(Symbol(A, 4)),
+    //                 or(
+    //                     not(Expr::Const(Symbol(A, 5))),
+    //                     or(
+    //                         not(Expr::Const(Symbol(A, 6))),
+    //                         or(
+    //                             not(Expr::Const(Symbol(A, 7))),
+    //                             or(
+    //                                 not(Expr::Const(Symbol(A, 8))),
+    //                                 Expr::Const(Symbol(A, 9))
+    //                             )
+    //                         )
+    //                     )
+    //                 )
+    //             )
+    //         )
+    //     )
+    // );
+
+    // for (n, value) in truth_table(testvsync, GenericSymbol('A')) {
+    //     println!("{} => {}", n.value, value);
+    // }
+
+    // let end_of_frame = simplify_complete(
+    //     substitute(GenericSymbol(B), NValue { value: 525 },
+    //         equal_to::<10>(GenericSymbol(A), GenericSymbol(B))
+    //     )
+    // );
+
+    // for (n, value) in truth_table(end_of_frame, GenericSymbol('A')) {
+    //     println!("{} => {}", n.value, value);
+    // }
+
+    // println!("{}", end_of_frame);
+
+    // ------------------------------------------------------------------
+    // let h_visible = simplify_complete(
+    //     substitute(GenericSymbol(B), NValue { value: 640 }, 
+    //         less_than::<10>(GenericSymbol(A), GenericSymbol(B))
+    //     )
+    // );
+
+    // for (n, value) in truth_table(h_visible, GenericSymbol('A')) {
+    //     println!("{} => {}", n.value, value);
+    // }
+
+    // println!("{}", h_visible);
+
+    // NOT (hsync >= 656) AND (hsync < 752)
+
+    // (hsync >= 656)
+    // let hsync_low = simplify_complete(
+    //     substitute(GenericSymbol(B), NValue { value: 656 },
+    //         greater_than_or_equal_to::<10>(GenericSymbol(A), GenericSymbol(B))
+    //     )
+    // );
+    // // (hsync < 752)
+    // let hsync_high = simplify_complete(
+    //     substitute(GenericSymbol(B), NValue { value: 752 }, 
+    //         less_than::<10>(GenericSymbol(A), GenericSymbol(B))
+    //     )
+    // );
+
+    // let hsync = not(
+    //     and(
+    //         hsync_low,
+    //         hsync_high
+    //     )
+    // );
+
+    // for (n, value) in truth_table(hsync, GenericSymbol('A')) {
+    //     println!("{} => {}", n.value, value);
+    // }
+
+    // println!("{}", hsync);
+
+    let end_line = simplify_complete(
+        substitute(GenericSymbol(B), NValue { value: 800 }, 
+            equal_to::<10>(GenericSymbol(A), GenericSymbol(B))
+        )
+    );
+
+    // for (n, value) in truth_table(end_line, GenericSymbol('A')) {
+    //     println!("{} => {}", n.value, value);
+    // }
+
+    println!("{}", end_line)
+
+
 }
 
 trait AsExpr<const N: u16> {
@@ -100,6 +200,12 @@ impl<const N: u16> AsExpr<N> for Symbol<N> {
 impl<const N: u16> AsExpr<N> for (char, u16) {
     fn expr(self) -> Expr<N> {
         Expr::Const(Symbol(self.0, self.1))
+    }
+}
+
+impl<const N: u16> AsExpr<N> for Box<Expr<N>> {
+    fn expr(self) -> Expr<N> {
+        *self.clone()
     }
 }
 
@@ -176,7 +282,9 @@ impl<const N: u16> Display for Expr<N> {
                 (Expr::Const(_), Expr::Const(_)) => format!("{} * {}", a, b),
                 (Expr::Const(_), Expr::Not(box Expr::Const(_))) => format!("{} * {}", a, b),
                 (Expr::Const(_), _) => format!("{} * ({})", a, b),
-                (Expr::Not(box Expr::Const(_)), Expr::Const(_)) => format!("{} * {}", a, b),
+                (Expr::Value(_), Expr::Value(_)) => format!("{} * {}", a, b),
+                (Expr::Value(_), _) => format!("{} * ({})", a, b),
+                (_, Expr::Value(_)) => format!("({}) * {}", a, b),
                 (Expr::Not(box Expr::Const(_)), Expr::Not(box Expr::Const(_))) => {
                     format!("{} * {}", a, b)
                 }
@@ -187,6 +295,9 @@ impl<const N: u16> Display for Expr<N> {
                 (Expr::Const(_), Expr::Const(_)) => format!("{} + {}", a, b),
                 (Expr::Const(_), Expr::Not(box Expr::Const(_))) => format!("{} + {}", a, b),
                 (Expr::Const(_), _) => format!("{} + ({})", a, b),
+                (Expr::Value(_), Expr::Value(_)) => format!("{} + {}", a, b),
+                (Expr::Value(_), _) => format!("{} + ({})", a, b),
+                (_, Expr::Value(_)) => format!("({}) + {}", a, b),
                 (Expr::Not(box Expr::Const(_)), Expr::Const(_)) => format!("{} + {}", a, b),
                 (Expr::Not(box Expr::Const(_)), Expr::Not(box Expr::Const(_))) => {
                     format!("{} + {}", a, b)
@@ -195,15 +306,18 @@ impl<const N: u16> Display for Expr<N> {
                 (_, _) => format!("({}) + ({})", a, b),
             },
             Expr::Xor(a, b) => match (*a.clone(), *b.clone()) {
-                (Expr::Const(_), Expr::Const(_)) => format!("{} ^ {}", a, b),
-                (Expr::Const(_), Expr::Not(box Expr::Const(_))) => format!("{} ^ {}", a, b),
-                (Expr::Const(_), _) => format!("{} ^ ({})", a, b),
-                (Expr::Not(box Expr::Const(_)), Expr::Const(_)) => format!("{} ^ {}", a, b),
+                (Expr::Const(_), Expr::Const(_)) => format!("{} ⊕ {}", a, b),
+                (Expr::Const(_), Expr::Not(box Expr::Const(_))) => format!("{} ⊕ {}", a, b),
+                (Expr::Const(_), _) => format!("{} ⊕ ({})", a, b),
+                (Expr::Value(_), Expr::Value(_)) => format!("{} ⊕ {}", a, b),
+                (Expr::Value(_), _) => format!("{} ⊕ ({})", a, b),
+                (_, Expr::Value(_)) => format!("({}) ⊕ {}", a, b),
+                (Expr::Not(box Expr::Const(_)), Expr::Const(_)) => format!("{} ⊕ {}", a, b),
                 (Expr::Not(box Expr::Const(_)), Expr::Not(box Expr::Const(_))) => {
-                    format!("{} ^ {}", a, b)
+                    format!("{} ⊕ {}", a, b)
                 }
-                (_, Expr::Const(_)) => format!("({}) ^ {}", a, b),
-                (_, _) => format!("({}) ^ ({})", a, b),
+                (_, Expr::Const(_)) => format!("({}) ⊕ {}", a, b),
+                (_, _) => format!("({}) ⊕ ({})", a, b),
             },
         };
         write!(f, "{}", s)
@@ -238,14 +352,21 @@ fn simplify<const N: u16>(expr: Expr<N>) -> Expr<N> {
             (Expr::Value(Value::False), Expr::Value(Value::False)) => Expr::Value(Value::False),
             (Expr::Value(Value::True), Expr::Value(Value::True)) => Expr::Value(Value::False),
             (Expr::Value(_), Expr::Value(_)) => Expr::Value(Value::True),
-            (_, _) => Expr::Xor(Box::new(simplify(*a)), Box::new(simplify(*b))),
+            // xor is !a*b + a*!b
+            (_, _) => or(
+                and(not(a.clone()), b.clone()),
+                and(a, not(b))
+            )
         },
     }
 }
 
+/// Substitute the value v for a single occurance of the symbol x in the expression expr
 fn sub_one<const N: u16>(x: Symbol<N>, v: Value, expr: Expr<N>) -> Expr<N> {
     match expr {
         Expr::Const(c) => {
+            // If the expression is a symbol c, then substitute c for v if it matches
+            // our given symbol x. Otherwise leave it as is.
             if c == x {
                 Expr::Value(v)
             } else {
@@ -366,20 +487,12 @@ fn less_than<const N: u16>(a: GenericSymbol<N>, b: GenericSymbol<N>) -> Expr<N> 
 }
 
 fn greater_than<const N: u16>(a: GenericSymbol<N>, b: GenericSymbol<N>) -> Expr<N> {
-    if true {
-        panic!("not fixed yet")
-    }
-    let mut expr = Expr::Empty;
-    for i in 0..N {
-        let n = N - 1 - i;
-        if expr == Expr::Empty {
-            expr = and(a.bit(n), not(b.bit(n)));
-        } else {
-            expr = or(
-                expr,
-                and(prod_of_xnor(a, b, n), and(a.bit(n), not(b.bit(n)))),
-            )
-        }
+    let mut expr = and(a.bit(N - 1), not(b.bit(N - 1)));
+    for n in (0..(N - 1)).rev() {
+        expr = or(
+            expr,
+            and(prod_of_xnor(a, b, n + 1), and(a.bit(n), not(b.bit(n))))
+        )
     }
     expr
 }
@@ -391,29 +504,23 @@ fn greater_than_or_equal_to<const N: u16>(a: GenericSymbol<N>, b: GenericSymbol<
 fn truth_table<const N: u16>(
     expr: Expr<N>,
     symbol: GenericSymbol<N>,
-) -> Result<Vec<(NValue<N>, Value)>, Expr<N>> {
-    let mut table: Vec<(NValue<N>, Value)> = Vec::new();
+) -> Vec<(NValue<N>, Expr<N>)> {
+    let mut table: Vec<(NValue<N>, Expr<N>)> = Vec::new();
     for i in 0..2_u16.pow(N.into()) {
         let value: NValue<N> = NValue::new(i);
         let sub = substitute(symbol, value, expr.clone());
         let simplified = simplify_complete(sub);
-        match simplified {
-            Ok(v) => table.push((value, v)),
-            Err(x) => return Err(x),
-        }
+        table.push((value, simplified));
     }
 
-    Ok(table)
+    table
 }
 
-fn simplify_complete<const N: u16>(expr: Expr<N>) -> Result<Value, Expr<N>> {
+fn simplify_complete<const N: u16>(expr: Expr<N>) -> Expr<N> {
     let simp = simplify(expr.clone());
     if simp == expr {
         // If they're equal, then it is simplified
-        match simp {
-            Expr::Value(v) => Ok(v),
-            _ => Err(simp),
-        }
+        return simp
     } else {
         simplify_complete(simp)
     }
